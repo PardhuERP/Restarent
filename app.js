@@ -3,90 +3,138 @@ const API =
 
 let menuData = [];
 
+let cart =
+JSON.parse(localStorage.getItem("cart")) || [];
+
+// Load Menu
 fetch(API)
-.then(r=>r.json())
-.then(data=>{
+.then(response => response.json())
+.then(data => {
 
- menuData = data;
+    menuData = data;
 
- const container =
- document.getElementById("menuContainer");
+    const container =
+    document.getElementById("menuContainer");
 
- data.forEach(item=>{
+    container.innerHTML = "";
 
-   const card =
-   document.createElement("div");
+    data.forEach(item => {
 
-   card.className="card";
+        const price =
+        item.OfferPrice &&
+        Number(item.OfferPrice) < Number(item.Price)
+        ?
+        `
+        <p>
+            <del>₹${item.Price}</del>
+            <span class="offer"> ₹${item.OfferPrice}</span>
+        </p>
+        `
+        :
+        `
+        <p>₹${item.Price}</p>
+        `;
 
-   card.innerHTML=`
+        const badge =
+        item.Bestseller &&
+        item.Bestseller.trim().toUpperCase() === "YES"
+        ?
+        `<span class="badge">⭐ Bestseller</span>`
+        :
+        "";
 
-   <h3>${item.Name}</h3>
+        const card =
+        document.createElement("div");
 
-   <p>${item.Description}</p>
+        card.className = "card";
 
-   <p>₹${item.Price}</p>
+        card.innerHTML = `
+            ${badge}
 
-   <button onclick="addToCart('${item.ItemID}')">
-   Add To Cart
-   </button>
+            <h3>${item.Name}</h3>
 
-   `;
+            <p>${item.Description}</p>
 
-   container.appendChild(card);
+            ${price}
 
- });
+            <button onclick="addToCart('${item.ItemID}')">
+                Add To Cart
+            </button>
+        `;
 
+        container.appendChild(card);
+
+    });
+
+    updateCartCount();
+
+})
+.catch(error => {
+    console.error("Menu Load Error:", error);
 });
 
+// Add Item To Cart
+function addToCart(id) {
 
- let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const item =
+    menuData.find(x => x.ItemID === id);
 
-function addToCart(id){
+    if (!item) return;
 
- const item = menuData.find(x => x.ItemID === id);
+    const existing =
+    cart.find(x => x.ItemID === id);
 
- const existing =
- cart.find(x => x.ItemID === id);
+    const itemPrice =
+    item.OfferPrice &&
+    Number(item.OfferPrice) < Number(item.Price)
+    ?
+    Number(item.OfferPrice)
+    :
+    Number(item.Price);
 
- if(existing){
-   existing.qty++;
- }else{
-   cart.push({
-     ItemID:item.ItemID,
-     Name:item.Name,
-     Price:Number(item.Price),
-     qty:1
-   });
- }
+    if (existing) {
 
- localStorage.setItem(
-   "cart",
-   JSON.stringify(cart)
- );
+        existing.qty++;
 
- updateCartCount();
+    } else {
 
- alert(item.Name + " Added");
-}
-}
+        cart.push({
+            ItemID: item.ItemID,
+            Name: item.Name,
+            Price: itemPrice,
+            qty: 1
+        });
 
-function updateCartCount(){
+    }
 
- const cart =
- JSON.parse(
- localStorage.getItem("cart")
- ) || [];
+    localStorage.setItem(
+        "cart",
+        JSON.stringify(cart)
+    );
 
- let total = 0;
+    updateCartCount();
 
- cart.forEach(item=>{
-   total += item.qty;
- });
-
- document.getElementById(
- "cartCount"
- ).innerText = total;
+    alert(item.Name + " Added To Cart");
 }
 
-updateCartCount();
+// Update Cart Count
+function updateCartCount() {
+
+    const cartData =
+    JSON.parse(
+        localStorage.getItem("cart")
+    ) || [];
+
+    let totalItems = 0;
+
+    cartData.forEach(item => {
+        totalItems += item.qty;
+    });
+
+    const cartCount =
+    document.getElementById("cartCount");
+
+    if (cartCount) {
+        cartCount.innerText = totalItems;
+    }
+}
