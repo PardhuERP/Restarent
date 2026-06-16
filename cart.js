@@ -1,140 +1,118 @@
-const API =
-"https://script.google.com/macros/s/AKfycbynUprr2yVmBLCj5KXArQYkS3rIw31Tlw3pfzogRSajoRMIfJ7UmFO2GG3BFQuPYeF11A/exec?action=menu";
-
-let menuData = [];
-
 let cart =
 JSON.parse(localStorage.getItem("cart")) || [];
 
-// Load Menu
-fetch(API)
-.then(response => response.json())
-.then(data => {
+const cartItems =
+document.getElementById("cartItems");
 
-    menuData = data;
+function renderCart(){
 
-    const container =
-    document.getElementById("menuContainer");
+  cartItems.innerHTML = "";
 
-    container.innerHTML = "";
+  let total = 0;
 
-    data.forEach(item => {
+  if(cart.length === 0){
 
-        const price =
-        item.OfferPrice &&
-        Number(item.OfferPrice) < Number(item.Price)
-        ?
-        `
-        <p>
-            <del>₹${item.Price}</del>
-            <span class="offer"> ₹${item.OfferPrice}</span>
-        </p>
-        `
-        :
-        `
-        <p>₹${item.Price}</p>
-        `;
+    cartItems.innerHTML = `
+      <div class="card">
+        <h3>Cart is Empty</h3>
+        <a href="index.html">
+          <button>Browse Menu</button>
+        </a>
+      </div>
+    `;
 
-        const badge =
-        item.Bestseller &&
-        item.Bestseller.trim().toUpperCase() === "YES"
-        ?
-        `<span class="badge">⭐ Bestseller</span>`
-        :
-        "";
+    document.getElementById(
+      "grandTotal"
+    ).innerText = "₹0";
 
-        const card =
-        document.createElement("div");
+    return;
+  }
 
-        card.className = "card";
+  cart.forEach((item,index)=>{
 
-        card.innerHTML = `
-            ${badge}
+    const itemTotal =
+    item.Price * item.qty;
 
-            <h3>${item.Name}</h3>
+    total += itemTotal;
 
-            <p>${item.Description}</p>
+    cartItems.innerHTML += `
 
-            ${price}
+    <div class="card">
 
-            <button onclick="addToCart('${item.ItemID}')">
-                Add To Cart
-            </button>
-        `;
+      <h3>${item.Name}</h3>
 
-        container.appendChild(card);
+      <p>₹${item.Price}</p>
 
-    });
+      <div class="qty-box">
 
-    updateCartCount();
+        <button onclick="decreaseQty(${index})">
+        -
+        </button>
 
-})
-.catch(error => {
-    console.error("Menu Load Error:", error);
-});
+        <span>${item.qty}</span>
 
-// Add Item To Cart
-function addToCart(id) {
+        <button onclick="increaseQty(${index})">
+        +
+        </button>
 
-    const item =
-    menuData.find(x => x.ItemID === id);
+      </div>
 
-    if (!item) return;
+      <p>Total: ₹${itemTotal}</p>
 
-    const existing =
-    cart.find(x => x.ItemID === id);
+      <button
+      class="remove-btn"
+      onclick="removeItem(${index})">
+      Remove
+      </button>
 
-    const itemPrice =
-    item.OfferPrice &&
-    Number(item.OfferPrice) < Number(item.Price)
-    ?
-    Number(item.OfferPrice)
-    :
-    Number(item.Price);
+    </div>
 
-    if (existing) {
+    `;
+  });
 
-        existing.qty++;
-
-    } else {
-
-        cart.push({
-            ItemID: item.ItemID,
-            Name: item.Name,
-            Price: itemPrice,
-            qty: 1
-        });
-
-    }
-
-    localStorage.setItem(
-        "cart",
-        JSON.stringify(cart)
-    );
-
-    updateCartCount();
-
-    alert(item.Name + " Added To Cart");
+  document.getElementById(
+  "grandTotal"
+  ).innerText =
+  "Grand Total: ₹" + total;
 }
 
-// Update Cart Count
-function updateCartCount() {
+function increaseQty(index){
 
-    const cartData =
-    JSON.parse(
-        localStorage.getItem("cart")
-    ) || [];
+  cart[index].qty++;
 
-    let totalItems = 0;
-
-    cartData.forEach(item => {
-        totalItems += item.qty;
-    });
-
-    const cartCount =
-    document.getElementById("cartCount");
-
-    if (cartCount) {
-        cartCount.innerText = totalItems;
-    }
+  saveCart();
 }
+
+function decreaseQty(index){
+
+  if(cart[index].qty > 1){
+
+    cart[index].qty--;
+
+  }else{
+
+    cart.splice(index,1);
+
+  }
+
+  saveCart();
+}
+
+function removeItem(index){
+
+  cart.splice(index,1);
+
+  saveCart();
+}
+
+function saveCart(){
+
+  localStorage.setItem(
+  "cart",
+  JSON.stringify(cart)
+  );
+
+  renderCart();
+}
+
+renderCart();
