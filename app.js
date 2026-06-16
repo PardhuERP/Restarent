@@ -1,9 +1,13 @@
 const API =
 "https://script.google.com/macros/s/AKfycbynUprr2yVmBLCj5KXArQYkS3rIw31Tlw3pfzogRSajoRMIfJ7UmFO2GG3BFQuPYeF11A/exec?action=menu";
 
+let menuData = [];
+
 fetch(API)
 .then(r=>r.json())
 .then(data=>{
+
+ menuData = data;
 
  const container =
  document.getElementById("menuContainer");
@@ -21,11 +25,7 @@ fetch(API)
 
    <p>${item.Description}</p>
 
-   <p>
-   <span class="price">
-   ₹${item.Price}
-   </span>
-   </p>
+   <p>₹${item.Price}</p>
 
    <button onclick="addToCart('${item.ItemID}')">
    Add To Cart
