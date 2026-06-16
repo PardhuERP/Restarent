@@ -39,6 +39,34 @@ fetch(API)
 
 });
 
+
+ let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
 function addToCart(id){
- alert("Added: "+id);
+
+ const item = menuData.find(x => x.ItemID === id);
+
+ const existing =
+ cart.find(x => x.ItemID === id);
+
+ if(existing){
+   existing.qty++;
+ }else{
+   cart.push({
+     ItemID:item.ItemID,
+     Name:item.Name,
+     Price:Number(item.Price),
+     qty:1
+   });
+ }
+
+ localStorage.setItem(
+   "cart",
+   JSON.stringify(cart)
+ );
+
+ updateCartCount();
+
+ alert(item.Name + " Added");
+}
 }
